@@ -1,0 +1,53 @@
+# OID 前缀: 1.3.6.1.4.1.99999 (测试用 OID)
+# 注意：生产环境需要申请正式的 OID
+
+# === 属性类型 ===
+
+# extPwdMaxLength - 密码最大长度（扩展，避免与 ppolicy 内置冲突）
+attributetype ( 1.3.6.1.4.1.99999.1.1
+    NAME 'extPwdMaxLength'
+    DESC 'Maximum length of password (extension)'
+    EQUALITY integerMatch
+    ORDERING integerOrderingMatch
+    SYNTAX 1.3.6.1.4.1.1466.115.121.1.27
+    SINGLE-VALUE
+    USAGE userApplications )
+
+# extPwdCharSet - 字符集要求（扩展）
+attributetype ( 1.3.6.1.4.1.99999.1.2
+    NAME 'extPwdCharSet'
+    DESC 'Character set requirements as bit mask (extension)'
+    EQUALITY integerMatch
+    ORDERING integerOrderingMatch
+    SYNTAX 1.3.6.1.4.1.1466.115.121.1.27
+    SINGLE-VALUE
+    USAGE userApplications )
+
+# extPwdNoUserCheck - 禁止密码包含用户名（扩展）
+attributetype ( 1.3.6.1.4.1.99999.1.3
+    NAME 'extPwdNoUserCheck'
+    DESC 'Check if password contains user name (extension)'
+    EQUALITY booleanMatch
+    SYNTAX 1.3.6.1.4.1.1466.115.121.1.7
+    SINGLE-VALUE
+    USAGE userApplications )
+
+# extPwdForbiddenStrings - 黑名单字符串（扩展）
+attributetype ( 1.3.6.1.4.1.99999.1.4
+    NAME 'extPwdForbiddenStrings'
+    DESC 'Comma-separated list of forbidden password substrings (extension)'
+    EQUALITY caseIgnoreMatch
+    SUBSTR caseIgnoreSubstringsMatch
+    SYNTAX 1.3.6.1.4.1.1466.115.121.1.15
+    SINGLE-VALUE
+    USAGE userApplications )
+
+# === 对象类 ===
+
+objectClass ( 1.3.6.1.4.1.99999.2
+    NAME 'pwdPolicyExt'
+    DESC 'Password policy extension object class'
+    SUP top
+    STRUCTURAL
+    MUST ( cn )
+    MAY ( extPwdMaxLength $ extPwdCharSet $ extPwdNoUserCheck $ extPwdForbiddenStrings ) )

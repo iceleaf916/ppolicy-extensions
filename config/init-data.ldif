@@ -1,0 +1,43 @@
+dn: dc=example,dc=com
+objectClass: top
+objectClass: dcObject
+objectClass: organization
+o: Example Organization
+dc: example
+
+dn: cn=admin,dc=example,dc=com
+objectClass: simpleSecurityObject
+objectClass: organizationalRole
+cn: admin
+description: LDAP administrator
+userPassword: admin123
+
+dn: ou=people,dc=example,dc=com
+objectClass: organizationalUnit
+ou: people
+
+dn: ou=pwpolicies,dc=example,dc=com
+objectClass: organizationalUnit
+ou: pwpolicies
+
+dn: cn=default,ou=pwpolicies,dc=example,dc=com
+objectClass: top
+objectClass: pwdPolicyExt
+cn: default
+extPwdMaxLength: 64
+extPwdCharSet: 7
+extPwdNoUserCheck: TRUE
+extPwdForbiddenStrings: weak,password123,admin,123456,letmein,iloveyou,111111,qwerty
+
+dn: uid=testuser,ou=people,dc=example,dc=com
+objectClass: inetOrgPerson
+objectClass: posixAccount
+objectClass: shadowAccount
+cn: Test User
+sn: User
+uid: testuser
+uidNumber: 1000
+gidNumber: 1000
+homeDirectory: /home/testuser
+loginShell: /bin/bash
+userPassword: Test@1234

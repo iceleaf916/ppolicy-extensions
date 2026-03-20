@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  openldap:
+    build:
+      context: .
+      dockerfile: Dockerfile.openldap
+    image: ppolicy-openldap:latest
+    container_name: ppolicy-openldap
+    ports:
+      - "389:389"
+    environment:
+      - LDAP_ADMIN_PASSWORD=admin123
+      - LDAP_DOMAIN=example.com
+      - LDAP_ORGANIZATION=Example Organization
+    volumes:
+      - ldap-data:/var/lib/ldap
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "ldapsearch", "-x", "-H", "ldap://localhost:389", "-b", "", "-s", "base"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+volumes:
+  ldap-data:

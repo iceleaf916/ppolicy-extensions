@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  builder:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: ppolicy-extensions-builder
+    container_name: ppolicy-builder
+    volumes:
+      - ./lib:/workspace/ppolicy-extensions/lib
+      - ./build:/workspace/ppolicy-extensions/build
+    environment:
+      - HTTP_PROXY=http://127.0.0.1:7890
+      - HTTPS_PROXY=http://127.0.0.1:7890
+    command: tail -f /dev/null

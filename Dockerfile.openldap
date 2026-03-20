@@ -1,0 +1,84 @@
+FROM ubuntu:24.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+ENV HTTP_PROXY=http://127.0.0.1:7890
+ENV HTTPS_PROXY=http://127.0.0.1:7890
+
+# 配置中国镜像源（清华）
+RUN echo 'deb https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ noble main restricted universe multiverse' > /etc/apt/sources.list \
+    && echo 'deb https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ noble-updates main restricted universe multiverse' >> /etc/apt/sources.list \
+    && echo 'deb https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ noble-security main restricted universe multiverse' >> /etc/apt/sources.list \
+    && echo 'deb https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ noble-backports main restricted universe multiverse' >> /etc/apt/sources.list
+
+# 安装 OpenLDAP 和相关依赖
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        slapd \
+        ldap-utils \
+        db-util \
+        libldap2-dev \
+        libsasl2-dev \
+        build-essential \
+        make \
+        sudo \
+        vim \
+        net-tools \
+        procps \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# 复制项目源码
+WORKDIR /workspace/ppolicy-extensions
+COPY . /workspace/ppolicy-extensions/
+
+# 编译 ppolicy-extensions 模块
+RUN make clean && make
+
+# 创建必要目录
+RUN mkdir -p /etc/ldap/schema \
+    && mkdir -p /var/lib/ldap \
+    && mkdir -p /var/run/slapd
+
+# 复制配置文件
+COPY config/slapd.conf /etc/ldap/slapd.conf
+COPY config/init-data.ldif /tmp/ldap/init-data.ldif
+
+# 复制扩展 schema 文件
+COPY schema/ppolicy-extension.schema /etc/ldap/schema/ppolicy-extension.schema
+
+# 初始化 LDAP 数据库
+RUN rm -rf /var/lib/ldap/* \
+    && slapadd -f /etc/ldap/slapd.conf -l /tmp/ldap/init-data.ldif
+
+# 创建启动脚本
+RUN echo '#!/bin/bash' > /start.sh \
+    && echo 'mkdir -p /var/run/slapd /var/lock/slapd' >> /start.sh \
+    && echo 'chown -R openldap:openldap /var/lib/ldap' >> /start.sh \
+    && echo 'chown -R root:root /etc/ldap/slapd.conf /etc/ldap/schema' >> /start.sh \
+    && echo 'echo "==================================="' >> /start.sh \
+    && echo 'echo "OpenLDAP Server with ppolicy-extensions"' >> /start.sh \
+    && echo 'echo "==================================="' >> /start.sh \
+    && echo 'echo "Base DN: dc=example,dc=com"' >> /start.sh \
+    && echo 'echo "Admin DN: cn=admin,dc=example,dc=com"' >> /start.sh \
+    && echo 'echo "Password: admin123"' >> /start.sh \
+    && echo 'echo ""' >> /start.sh \
+    && echo 'echo "Test user DN: uid=testuser,ou=people,dc=example,dc=com"' >> /start.sh \
+    && echo 'echo "Test user password: Test@1234"' >> /start.sh \
+    && echo 'echo ""' >> /start.sh \
+    && echo 'echo "Password Policy (stored in cn=default,ou=pwpolicies,dc=example,dc=com):"' >> /start.sh \
+    && echo 'echo "  - extPwdMaxLength: 64"' >> /start.sh \
+    && echo 'echo "  - extPwdCharSet: 7 (upper + lower + digit)"' >> /start.sh \
+    && echo 'echo "  - extPwdNoUserCheck: TRUE"' >> /start.sh \
+    && echo 'echo "  - extPwdForbiddenStrings: weak,password123,admin,..."' >> /start.sh \
+    && echo 'echo "==================================="' >> /start.sh \
+    && echo 'echo ""' >> /start.sh \
+    && echo '/usr/sbin/slapd -h "ldap://0.0.0.0:389/" -f /etc/ldap/slapd.conf -u openldap -g openldap' >> /start.sh \
+    && echo 'sleep infinity' >> /start.sh \
+    && chmod +x /start.sh
+
+EXPOSE 389
+
+HEALTHCHECK --interval=10s --timeout=5s --start-period=5s --retries=3 \
+    CMD ldapsearch -x -H ldap://localhost:389 -b "" -s base 2>/dev/null | grep -q "dn:" || exit 1
+
+CMD ["/start.sh"]

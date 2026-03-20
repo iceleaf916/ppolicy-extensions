@@ -1,0 +1,38 @@
+# Build outputs
+build/
+lib/*.so
+*.o
+*.a
+*.so.*
+
+# Test outputs
+test_*
+!tests/unit/test_*
+
+# Temporary files
+*.swp
+*.swo
+*~
+.DS_Store
+
+# IDE files
+.idea/
+.vscode/
+*.code-workspace
+
+# Logs
+*.log
+
+# Backup files
+*.bak
+*.orig
+
+# OpenLDAP data (don't commit production data)
+/var/lib/ldap/
+
+# Docker volumes
+volumes/
+
+# Temporary test files
+tmp/
+temp/
