@@ -18,4 +18,4 @@ WORKDIR /build
 # 构建脚本
 COPY . .
 
-CMD ["make", "build-all"]
+RUN make
