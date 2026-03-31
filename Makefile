@@ -7,6 +7,16 @@ ifeq ($(HAS_LDAP),yes)
 LDFLAGS += -lldap -llber
 endif
 
+# 架构支持
+ARCH ?= $(shell uname -m)
+ifeq ($(ARCH),x86_64)
+ARCH_NAME = amd64
+else ifeq ($(ARCH),aarch64)
+ARCH_NAME = arm64
+else
+ARCH_NAME = $(ARCH)
+endif
+
 # 源文件
 SRC = src/utils.c \
       src/check_maxlength.c \
@@ -19,27 +29,35 @@ SRC = src/utils.c \
 
 # 对象文件
 OBJ = $(SRC:.c=.o)
-OBJ := $(addprefix build/,$(notdir $(OBJ)))
+OBJ := $(addprefix build/$(ARCH_NAME)/,$(notdir $(OBJ)))
 
 # 库文件
-MODULE = lib/ppolicy_ext.so
+MODULE = lib/ppolicy_ext_$(ARCH_NAME).so
 
-.PHONY: all clean test install
+.PHONY: all clean test install build-all build-amd64 build-arm64
 
 all: lib $(MODULE)
+
+build-all: build-amd64 build-arm64
+
+build-amd64:
+	$(MAKE) ARCH=x86_64 CC=gcc
+
+build-arm64:
+	$(MAKE) ARCH=aarch64 CC=aarch64-linux-gnu-gcc
 
 lib:
 	mkdir -p lib
 
-build:
-	mkdir -p build
+build/$(ARCH_NAME):
+	mkdir -p build/$(ARCH_NAME)
 
-build/%.o: src/%.c | build
+build/$(ARCH_NAME)/%.o: src/%.c | build/$(ARCH_NAME)
 	$(CC) $(CFLAGS) -c $< -o $@
 
 $(MODULE): $(OBJ)
 	$(CC) $(LDFLAGS) -o $@ $^
-	@echo "Module built: $@"
+	@echo "Module built: $@ ($(ARCH_NAME))"
 
 test: $(MODULE)
 	@echo "Running unit tests..."
@@ -52,7 +70,7 @@ test: $(MODULE)
 	@echo "All tests passed!"
 
 clean:
-	rm -rf build lib *.o test_* $(MODULE)
+	rm -rf build lib *.o test_*
 
 install: $(MODULE)
 	install -d $(DESTDIR)/opt/ppolicy-extensions/lib

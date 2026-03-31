@@ -56,17 +56,20 @@ ldapsearch -x -H ldap://localhost:389 -b "dc=example,dc=com" \
 ### 编译扩展模块
 
 ```bash
-# 使用 Docker 编译
-docker build -t ppolicy-extensions-builder -f Dockerfile .
-docker run --rm -v $(pwd):/workspace/ppolicy-extensions ppolicy-extensions-builder make clean all
+# 交叉编译 amd64 + arm64（推荐）
+./build-so.sh
 
-# 本地编译
+# 本地编译（当前架构）
 sudo apt-get install slapd libldap-dev ldap-utils build-essential make
 make clean && make
 
 # 运行测试
 make test
 ```
+
+**交叉编译输出：**
+- `lib/ppolicy_ext_amd64.so` - x86_64 架构
+- `lib/ppolicy_ext_arm64.so` - aarch64 架构
 
 ---
 
@@ -76,6 +79,8 @@ make test
 ppolicy-extensions/
 ├── Dockerfile               # 编译环境 Docker 镜像
 ├── Dockerfile.openldap      # OpenLDAP 服务 Docker 镜像
+├── Dockerfile.so-builder    # 交叉编译 Docker 镜像
+├── build-so.sh              # 交叉编译脚本（amd64 + arm64）
 ├── docker-compose.yml       # 编译环境 Docker Compose 配置
 ├── docker-compose.openldap.yml  # OpenLDAP 服务 Docker Compose 配置
 ├── Makefile                 # 主构建文件
