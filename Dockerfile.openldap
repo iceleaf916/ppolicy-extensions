@@ -42,6 +42,7 @@ RUN mkdir -p /etc/ldap/schema \
 # 复制配置文件
 COPY config/slapd.conf /etc/ldap/slapd.conf
 COPY config/init-data.ldif /tmp/ldap/init-data.ldif
+COPY config/ppolicy_ext.conf /etc/ldap/ppolicy_ext.conf
 
 # 复制扩展 schema 文件
 COPY schema/ppolicy-extension.schema /etc/ldap/schema/ppolicy-extension.schema
@@ -72,7 +73,7 @@ RUN echo '#!/bin/bash' > /start.sh \
     && echo 'echo "  - extPwdForbiddenStrings: weak,password123,admin,..."' >> /start.sh \
     && echo 'echo "==================================="' >> /start.sh \
     && echo 'echo ""' >> /start.sh \
-    && echo '/usr/sbin/slapd -h "ldap://0.0.0.0:389/" -f /etc/ldap/slapd.conf -u openldap -g openldap' >> /start.sh \
+    && echo '/usr/sbin/slapd -h "ldap://0.0.0.0:389/ ldapi:///" -f /etc/ldap/slapd.conf -u openldap -g openldap' >> /start.sh \
     && echo 'sleep infinity' >> /start.sh \
     && chmod +x /start.sh
 

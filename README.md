@@ -91,11 +91,11 @@ ppolicy-extensions/
 ├── src/
 │   ├── module.c             # 模块初始化
 │   ├── check.c              # 主检查入口
+│   ├── check_password.c     # slapo-ppolicy 入口及策略解析
 │   ├── check_maxlength.c    # 最大长度检查
 │   ├── check_charset.c      # 字符集检查
 │   ├── check_user.c         # 用户名检查
-│   ├── check_forbidden.c     # 黑名单检查
-│   ├── policy.c             # 策略加载
+│   ├── check_forbidden.c    # 黑名单检查
 │   └── utils.c              # 工具函数
 ├── mock/
 │   └── ldap.h               # Mock LDAP 头文件（无 libldap 时使用）
@@ -106,12 +106,15 @@ ppolicy-extensions/
 │   ├── test_check_maxlength.c
 │   ├── test_check_charset.c
 │   ├── test_check_user.c
-│   ├── test_check_forbidden.c
-│   └── test_policy.c
+│   └── test_check_forbidden.c
+└── tests/integration/       # 集成测试
+    └── test_ppolicy_integration.sh
 └── docs/
     ├── development-guide.md  # 开发指南
     ├── testing-guide.md     # 测试指南
-    └── ppolicy-overlay-design.md  # 设计文档
+    ├── ppolicy-overlay-design.md  # 设计文档
+    ├── ppolicy-overlay-detailed-design.md  # 详细设计文档
+    └── project-technical-overview.md  # 项目技术概述
 ```
 
 ---
@@ -120,18 +123,23 @@ ppolicy-extensions/
 
 ### 密码策略 LDIF
 
+策略通过 `pwdCheckModuleArg` 传递给模块，格式为 `key=value` 字符串：
+
 ```ldif
 dn: cn=default,ou=pwpolicies,dc=example,dc=com
 objectClass: top
-objectClass: pwdPolicyExt
+objectClass: device
+objectClass: pwdPolicy
+objectClass: pwdPolicyChecker
 cn: default
-
-# 扩展属性
-extPwdMaxLength: 64
-extPwdCharSet: 7          # 大写 + 小写 + 数字
-extPwdNoUserCheck: TRUE
-extPwdForbiddenStrings: weak,password123,admin,123456,letmein,iloveyou
+pwdAttribute: userPassword
+pwdCheckQuality: 2
+pwdUseCheckModule: TRUE
+pwdCheckModuleArg: extPwdMaxLength=64 extPwdCharSet=7 extPwdNoUserCheck=TRUE
+ extPwdForbiddenStrings=weak,password123,admin,123456,letmein,iloveyou,111111,qwerty
 ```
+
+> 注意：扩展属性（如 `extPwdMaxLength`）不作为独立属性存储，所有配置通过 `pwdCheckModuleArg` 字符串传递，模块运行时解析。
 
 ### 用户条目引用策略
 
@@ -164,13 +172,6 @@ int ppolicy_ext_check_password(
     pwd_user_context_t*     user,
     pwd_policy_extension_t* policy
 );
-
-// 策略加载
-int ppolicy_ext_load_policy(
-    LDAP*                   ld,
-    const char*             policy_dn,
-    pwd_policy_extension_t* policy
-);
 ```
 
 ---
@@ -182,12 +183,14 @@ int ppolicy_ext_load_policy(
 make test
 
 # 测试覆盖
-# - test_utils.c          # 工具函数
+# - test_utils.c           # 工具函数
 # - test_check_maxlength.c # 最大长度检查
 # - test_check_charset.c   # 字符集检查
 # - test_check_user.c      # 用户名检查
-# - test_check_forbidden.c # 黑名单检查
-# - test_policy.c          # 策略加载
+# - test_check_forbidden.c  # 黑名单检查
+
+# 集成测试（需先启动 OpenLDAP 容器）
+bash tests/integration/test_ppolicy_integration.sh
 ```
 
 ---

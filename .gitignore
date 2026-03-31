@@ -8,6 +8,7 @@ lib/*.so
 # Test outputs
 test_*
 !tests/unit/test_*
+!tests/integration/test_*
 
 # Temporary files
 *.swp

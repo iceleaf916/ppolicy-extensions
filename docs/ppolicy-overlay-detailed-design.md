@@ -614,7 +614,6 @@ sudo make install
 # 安装位置:
 # - 模块: /opt/ppolicy-extensions/lib/ppolicy_ext.so
 # - Schema: /etc/openldap/schema/ppolicy-extension.schema
-# - 配置: /opt/ppolicy-extensions/etc/ppolicy_ext.conf
 ```
 
 ### 7.5 测试

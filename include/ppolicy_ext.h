@@ -64,26 +64,10 @@ int ppolicy_ext_check_password(
     pwd_policy_extension_t* policy
 );
 
-/* 策略加载 */
-int ppolicy_ext_load_policy(
-    LDAP*                   ld,
-    const char*             policy_dn,
-    pwd_policy_extension_t* policy
-);
-
-int ppolicy_ext_get_policy_dn(
-    LDAP*   ld,
-    const char* user_dn,
-    char*   policy_dn_buf,
-    size_t  buf_size
-);
-
 /* 工具函数 */
 const char* ppolicy_check_result_to_string(pwd_check_result_t result);
 char* ppolicy_trim(char* str);
 int ppolicy_strcasestr(const char* haystack, const char* needle);
-int ppolicy_parse_string_list(const char* input, char** output, int max_count);
-void ppolicy_free_string_list(char** list, int count);
 
 /* 错误格式化 */
 void ppolicy_format_error(

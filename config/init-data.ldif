@@ -22,12 +22,14 @@ ou: pwpolicies
 
 dn: cn=default,ou=pwpolicies,dc=example,dc=com
 objectClass: top
-objectClass: pwdPolicyExt
+objectClass: device
+objectClass: pwdPolicy
+objectClass: pwdPolicyChecker
 cn: default
-extPwdMaxLength: 64
-extPwdCharSet: 7
-extPwdNoUserCheck: TRUE
-extPwdForbiddenStrings: weak,password123,admin,123456,letmein,iloveyou,111111,qwerty
+pwdAttribute: userPassword
+pwdCheckQuality: 2
+pwdUseCheckModule: TRUE
+pwdCheckModuleArg: extPwdMaxLength=64 extPwdCharSet=7 extPwdNoUserCheck=TRUE extPwdForbiddenStrings=weak,password123,admin,123456,letmein,iloveyou,111111,qwerty
 
 dn: uid=testuser,ou=people,dc=example,dc=com
 objectClass: inetOrgPerson

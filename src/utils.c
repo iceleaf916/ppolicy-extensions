@@ -44,34 +44,6 @@ int ppolicy_strcasestr(const char* haystack, const char* needle) {
     return 0;
 }
 
-int ppolicy_parse_string_list(const char* input, char** output, int max_count) {
-    if (!input || !output || max_count <= 0) return 0;
-
-    char* copy = strdup(input);
-    if (!copy) return 0;
-
-    int count = 0;
-    char* token = strtok(copy, ",");
-    while (token && count < max_count) {
-        /* 对每个 token 分别 trim */
-        char* trimmed = ppolicy_trim(token);
-        output[count] = strdup(trimmed);
-        if (output[count]) count++;
-        token = strtok(NULL, ",");
-    }
-
-    free(copy);
-    return count;
-}
-
-void ppolicy_free_string_list(char** list, int count) {
-    if (!list) return;
-    for (int i = 0; i < count; i++) {
-        free(list[i]);
-        list[i] = NULL;
-    }
-}
-
 void ppolicy_format_error(pwd_check_result_t result, char* buf, size_t buf_size, ...) {
     snprintf(buf, buf_size, "%s", ppolicy_check_result_to_string(result));
 }
